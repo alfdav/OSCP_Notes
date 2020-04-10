@@ -1,0 +1,81 @@
+#exhaustive list
+https://backdoorshell.gitbooks.io/oscp-useful-links/content/backdoorsweb-shells.html
+
+  ==== IP DISCOVERY ====
+netdiscover -r 10.10.10.10/24
+
+#onetwopunch - https://github.com/superkojiman/onetwopunch
+./onetwopunch.sh lab.txt tcp
+
+# quick scan
+nmap -sC -sV -vv -oA quick 10.10.10.10
+
+# udp scan
+nmap -sU -sV -vv -oA quick_udp 10.10.10.10
+
+# full tcp
+nmap -sC -sV -p- -vv -oA full 10.10.10.10
+
+#AutoRecon https://github.com/Tib3rius/AutoRecon
+python3 autorecon.py -ct 2 -cs 2 -vv -o lab -t lab.txt
+python3 autorecon.py -ct 2 -cs 2 -vv -o exam 10.10.10.10/29
+
+#(unicornscan) - https://kalilinuxtutorials.com/unicornscan/
+us -H -mU -Iv 10.10.10.10 -p 1-65535   
+  ## UDP scan
+  ## -H = resolve hostnames 
+  ## -m = scan mode (sf - tcp, U - udp)
+  ## -Iv - verbose
+
+#port knocking
+for x in 7000 8000 9000; do nmap -Pn --host_timeout 201 --max-retries 0 -p $x 10.10.10.10; done
+
+==== WEB (Port 80) ====
+
+#searches for known files, like robots.txt, .htaccess, .htpasswd, etc
+nmap --script http-enum 192.168.10.55
+
+#web-scan
+gobuster -u 10.10.10.10 -w /usr/share/seclists/Discovery/Web_Content/common.txt -t 80 -a Linux
+
+#comprehensive directory busting
+gobuster -s 200,204,301,302,307,403 -u 10.10.10.10 -w /usr/share/seclists/Discovery/Web_Content/big.txt -t 80 -a 'Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0'
+
+#search with file extension
+gobuster -u 10.10.10.10 -w /usr/share/seclists/Discovery/Web_Content/common.txt -t 80 -a Linux -x .txt,.php
+
+#grep robots
+curl -s http://192.168.56.102/robots.txt | grep Disallow | sed 's/Disallow: //'
+  ## check which page is accessible to us (200 OK)
+  for i in $(curl -s http://192.168.56.102/robots.txt | grep Disallow | sed 's/Disallow: //') ; \
+  do RESULT=$(curl -s -I http://192.168.56.102"$i" | grep "200 OK") ; echo -e "$i $RESULT\r" ; done
+
+#nikto
+nikto -h 10.10.10.10
+
+#wpscan
+wpscan -u 10.10.10.10/wp/
+
+#port check
+nc -v 10.10.10.10 port
+
+#banner grab
+telnet 10.10.10.10 port
+
+#smb-check
+nmap -p 445 -vv --script=smb-vuln-cve2009-3103.nse,smb-vuln-ms06-025.nse,smb-vuln-ms07-029.nse,smb-vuln-ms08-067.nse,smb-vuln-ms10-054.nse,smb-vuln-ms10-061.nse,smb-vuln-ms17-010.nse 10.10.10.10
+
+#smb-user-enumeration
+nmap -p 445 -vv --script=smb-enum-shares.nse,smb-enum-users.nse 10.10.10.10
+
+#snmp-check
+snmp-check 10.10.10.10
+
+#find DNS (A) records by trying a list of common sub-domains from a wordlist.
+nmap -p 80 --script dns-brute.nse domain.com
+python dnscan.py -d domain.com -w ./subdomains-10000.txt
+
+  ==== SSH server info ====
+nmap --script=ssh2-enum-algos,ssh-hostkey,sshv1.nse 192.168.13.234 
+
+
